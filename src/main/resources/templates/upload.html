@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Upload PDF - Note2Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: '#4f46e5',
+                            dark: '#4338ca'
+                        },
+                        secondary: '#0ea5e9'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .drag-active {
+            border-color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+
+        .upload-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+        }
+
+        .gradient-border {
+            position: relative;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%);
+            border-radius: 1rem;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gradient-border:hover::before {
+            opacity: 1;
+        }
+
+        .page-bg {
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.05) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="page-bg min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
+            <div class="flex justify-between items-center h-full">
+                <div class="flex items-center">
+                    <a th:href="@{/}" class="flex items-center">
+                        <span class="text-xl font-extrabold gradient-text">Note2Test</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-8">
+                    <a th:href="@{/how-it-works}" class="text-gray-600 hover:text-primary text-sm font-semibold">How it Works</a>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary p-[2px] cursor-pointer">
+                        <div class="w-full h-full rounded-full bg-white flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-16">
+        <div class="upload-container rounded-2xl shadow-xl p-8 sm:p-12 w-full max-w-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary/50"></div>
+            
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold gradient-text mb-3">Upload Your Study Materials</h1>
+                <p class="text-gray-600 text-lg">Transform your PDF notes into interactive quizzes in seconds</p>
+            </div>
+
+            <!-- Error Message -->
+            <div th:if="${error}" class="mb-6">
+                <div class="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 text-sm text-red-600" th:text="${error}">Error message will appear here</div>
+                    </div>
+                </div>
+                <button 
+                    type="button" 
+                    id="retryButton" 
+                    onclick="retrySubmission()"
+                    class="w-full py-3 px-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+                    disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                    </svg>
+                    <span id="retryText">Retry in <span id="countdown">30</span>s</span>
+                </button>
+            </div>
+
+            <form th:action="@{/upload}" method="post" enctype="multipart/form-data" class="space-y-8">
+
+            <!-- Upload Zone -->
+            <div id="dropzone"
+                 class="group w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl px-6 py-10 cursor-pointer hover:border-primary/70 transition-all duration-300 bg-gray-50/50 hover:bg-white gradient-border"
+                 onclick="document.getElementById('fileInput').click()"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)"
+                 ondrop="handleDrop(event)">
+
+                <div class="mb-4 p-4 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4a2 2 0 012-2h6a2 2 0 012 2v12m-4 4h-4m0 0l-2-2m2 2l2-2" />
+                    </svg>
+                </div>
+                <p class="text-lg font-semibold text-gray-700 mb-2">Drop your PDF here</p>
+                <p class="text-gray-500 mb-1">or <span class="text-primary font-semibold">browse files</span></p>
+                <p class="text-sm text-gray-400">PDF files only · Maximum size: 5MB</p>
+
+                <!-- Hidden input -->
+                <input type="file" id="fileInput" name="file" accept="application/pdf" required class="hidden" onchange="showFileName(this)" />
+            </div>
+
+            <!-- File name display -->
+            <div id="fileName" class="mt-4 px-4 py-3 bg-primary/10 rounded-lg text-primary font-semibold text-center hidden"></div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden mt-4">
+                <div class="flex items-center justify-center gap-3 p-4 bg-primary/5 rounded-lg">
+                    <div class="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+                    <span class="text-primary font-semibold">Processing your file...</span>
+                </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 p-2 bg-primary/10 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Instant Processing</h3>
+                        <p class="text-sm text-gray-500">Your notes are analyzed in seconds</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 p-2 bg-primary/10 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Secure Upload</h3>
+                        <p class="text-sm text-gray-500">Your data is encrypted and safe</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit"
+                    class="w-full py-4 px-6 mt-8 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-xl shadow-md hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+                🚀 Generate Smart Quizzes
+            </button>
+
+            <p class="text-center text-sm text-gray-500 mt-4">
+                By uploading, you agree to our <a href="#" class="text-primary hover:underline">Terms of Service</a>
+            </p>
+        </form>
+    </div>
+
+    <!-- JS for Drag and Drop -->
+    <script>
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('dropzone').classList.add('drag-active');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('dropzone').classList.remove('drag-active');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const dt = e.dataTransfer;
+            if (dt.files.length > 0) {
+                fileInput.files = dt.files;
+                showFileName(fileInput);
+            }
+            document.getElementById('dropzone').classList.remove('drag-active');
+        }
+
+        function showFileName(input) {
+            const fileName = input.files[0]?.name;
+            const display = document.getElementById('fileName');
+            if (fileName) {
+                display.textContent = `Selected file: ${fileName}`;
+                display.classList.remove('hidden');
+            } else {
+                display.textContent = '';
+                display.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
