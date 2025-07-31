@@ -3,6 +3,8 @@ package com.note2test.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.note2test.model.Question;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -12,10 +14,13 @@ import java.util.*;
 @Service
 public class GeminiService {
 
-    private static final String API_KEY = "AIzaSyB2xh0evZ_-s_nBoZF_qjD-ChDl4PPnlVg";
-    private static final String GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY;
+    @Value("${gemini.api.key}")
+    private String apiKey;
+    private static final String GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     public List<Question> generateQuestions(String content) throws Exception {
+        String GEMINI_URL = GEMINI_ENDPOINT + "?key=" + apiKey;
+
         String prompt = """
             You are an educational AI assistant.
 
