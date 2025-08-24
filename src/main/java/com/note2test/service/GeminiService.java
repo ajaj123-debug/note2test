@@ -67,7 +67,7 @@ public class GeminiService {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         ObjectMapper mapper = new ObjectMapper();
-        System.out.println("🟡 Raw Gemini response:\n" + response.body());
+        System.out.println("Raw Gemini response:\n" + response.body());
 
         JsonNode responseNode = mapper.readTree(response.body());
         

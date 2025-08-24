@@ -76,6 +76,8 @@ public class UploadController {
             String given = answers.get("answers[" + i + "]");
             if (correct.equalsIgnoreCase(given)) score++;
         }
+        double percentage = ((double)score * 100 / currentQuestions.size());
+        model.addAttribute("percentage", percentage);
         model.addAttribute("score", score);
         return "result";
     }
